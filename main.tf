@@ -86,3 +86,11 @@ resource "azurerm_network_interface_backend_address_pool_association" "udacity_n
   ip_configuration_name   = "udacityConfiguration"
   backend_address_pool_id = azurerm_lb_backend_address_pool.udacity_lb_bap.id
 }
+
+resource "azurerm_availability_set" "udacity_aset" {
+  name                = "udacity-aset"
+  location            = azurerm_resource_group.udacity_rg.location
+  resource_group_name = azurerm_resource_group.udacity_rg.name
+
+  tags = var.tags
+}
