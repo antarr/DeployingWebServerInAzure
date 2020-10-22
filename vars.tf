@@ -41,3 +41,8 @@ variable "packer_image_name" {
   description = "Name of image to be used on Virtual Machines"
   default     = "udacityPackerImage"
 }
+
+variable "tenant_id" {
+  type        = string
+  description = "Used for logging in"
+}

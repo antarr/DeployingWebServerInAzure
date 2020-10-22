@@ -1,6 +1,16 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 2.27.0"
+    }
+  }
+}
+
 provider "azurerm" {
-  version = "~>2.0"
+  version = "~> 2.27.0"
   features {}
+  tenant_id = var.tenant_id
 }
 
 resource "azurerm_resource_group" "udacity_rg" {
