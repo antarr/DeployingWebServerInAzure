@@ -52,22 +52,41 @@ For this project, you will write a Packer template and a Terraform template to d
 # Output
 
 A network of virtual machines will be created behind a loadbalancer which are accessed through a single public IP address
-You can run `terraform show` and should get a response including a loadbalancer with a public ip address
+The output after apply should include public IP(s) with a public ip address(es)
 
 ```
-resource "azurerm_public_ip" "udacity_pip" {
-    allocation_method       = "Static"
-    id                      = "/subscriptions/your-subscription-id/resourceGroups/udacity-rg/providers/Microsoft.Network/publicIPAddresses/udacity-deploy-pip"
-    idle_timeout_in_minutes = 4
-    ip_address              = "52.190.xx.xx"
-    ip_version              = "IPv4"
-    location                = "eastus"
-    name                    = "udacity-deploy-pip"
-    resource_group_name     = "udacity-rg"
-    sku                     = "Standard"
-    tags                    = {
+public_ip = [
+  [
+    {
+      "allocation_method" = "Static"
+      "id" = "/subscriptions/66ede491-2bb4-4c65-bb87-7a7b1ed555c3/resourceGroups/udacity-rg/providers/Microsoft.Network/publicIPAddresses/udacity-pip-0"
+      "idle_timeout_in_minutes" = 4
+      "ip_address" = "52.152.247.125"
+      "ip_version" = "IPv4"
+      "location" = "eastus"
+      "name" = "udacity-pip-0"
+      "resource_group_name" = "udacity-rg"
+      "sku" = "Standard"
+      "tags" = {
         "project" = "Deploying WebServer In Azure"
-    }
-    zones                   = []
-}
+      }
+      "zones" = []
+    },
+    {
+      "allocation_method" = "Static"
+      "id" = "/subscriptions/66ede491-2bb4-4c65-bb87-7a7b1ed555c3/resourceGroups/udacity-rg/providers/Microsoft.Network/publicIPAddresses/udacity-pip-1"
+      "idle_timeout_in_minutes" = 4
+      "ip_address" = "52.152.246.128"
+      "ip_version" = "IPv4"
+      "location" = "eastus"
+      "name" = "udacity-pip-1"
+      "resource_group_name" = "udacity-rg"
+      "sku" = "Standard"
+      "tags" = {
+        "project" = "Deploying WebServer In Azure"
+      }
+      "zones" = []
+    },
+  ],
+]
 ```

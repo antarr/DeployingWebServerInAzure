@@ -79,7 +79,8 @@ resource "azurerm_network_security_group" "udacity_nsg" {
 }
 
 resource "azurerm_public_ip" "udacity_pip" {
-  name                = "${var.prefix}-pip"
+  count = var.instance_count
+  name                = "udacity-pip-${count.index}"
   resource_group_name = azurerm_resource_group.udacity_rg.name
   location            = azurerm_resource_group.udacity_rg.location
   allocation_method   = "Static"
@@ -103,27 +104,29 @@ resource "azurerm_network_interface" "udacity_ni" {
 }
 
 resource "azurerm_lb" "udacity_lb" {
+  count               = var.instance_count
   name                = "${var.prefix}-loadbalancer"
   resource_group_name = azurerm_resource_group.udacity_rg.name
   location            = azurerm_resource_group.udacity_rg.location
   sku                 = "Standard"
   frontend_ip_configuration {
-    name                 = "PublicIPAddress"
-    public_ip_address_id = azurerm_public_ip.udacity_pip.id
+    name                 = "PublicIPAddress-${count.index}"
+    public_ip_address_id = azurerm_public_ip.udacity_pip[count.index].id
   }
 }
 
 resource "azurerm_lb_backend_address_pool" "udacity_lb_bap" {
+  count               = var.instance_count
   resource_group_name = azurerm_resource_group.udacity_rg.name
-  loadbalancer_id     = azurerm_lb.udacity_lb.id
-  name                = "UdacityBackEndAddressPool"
+  loadbalancer_id     = azurerm_lb.udacity_lb[count.index].id
+  name                = "UdacityBackEndAddressPool-${count.index}"
 }
 
 resource "azurerm_network_interface_backend_address_pool_association" "udacity_ni_bapa" {
   count                   = var.instance_count
   network_interface_id    = azurerm_network_interface.udacity_ni[count.index].id
   ip_configuration_name   = "udacity_nic_config-${count.index}"
-  backend_address_pool_id = azurerm_lb_backend_address_pool.udacity_lb_bap.id
+  backend_address_pool_id = azurerm_lb_backend_address_pool.udacity_lb_bap[count.index].id
 }
 
 resource "azurerm_availability_set" "udacity_aset" {
