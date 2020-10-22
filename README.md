@@ -7,10 +7,12 @@ For this project, you will write a Packer template and a Terraform template to d
 ### Getting Started
 
 1. Clone this repository
-
-2. Create your infrastructure as code
-
-3. Update this README to reflect how someone would use your code.
+2. Ensure you have all dependencies listed below
+3. Export environment variables required by packer. Can be found in the azure portal
+   1. ARM_CLIENT_ID - from Terraform app registration that can be found or create in Azure Portal
+   2. ARM_CLIENT_SECRET - create in azure portal under app registrations
+   3. ARM_SUBSCRIPTION_ID - your Azure subscriptions
+4. Follow the instructions below in order
 
 ### Dependencies
 
@@ -22,20 +24,22 @@ For this project, you will write a Packer template and a Terraform template to d
 ### Instructions
 
 - Create Tagging Security Policy using template using the command below
-
-    `az policy definition create --name tagging-policy --mode indexed --rules taggingpolicy.json`
+  - `az policy definition create --name tagging-policy --mode indexed --rules taggingpolicy.json`
 
 - Apply tagging sercurity policy in Azure Portal
-
-    [follow guide managing policies](https://docs.microsoft.com/en-us/azure/governance/policy/tutorials/create-and-manage#assign-a-policy)
+  - [follow guide managing policies](https://docs.microsoft.com/en-us/azure/governance/policy/tutorials/create-and-manage#assign-a-policy)
 
 - Ensure resource group `packer-rg` exists in zone of your choice using the command below***
-
-    `az group create -l eastus -n packer-rg`
+  - `az group create -l eastus -n packer-rg`
 
 - Deploy the server image
+  - `ARM_CLIENT_ID=your_client_id ARM_CLIENT_SECRET=your_client_secret ARM_SUBSCRIPTION_ID=your_subscription_id packer build server.json`
 
-    `ARM_CLIENT_ID=your_client_id ARM_CLIENT_SECRET=your_client_secret ARM_SUBSCRIPTION_ID=your_subscription_id packer build server.json`
+- Deploy resources to Azure using `main.tf`
+  1. create plan
+    - `terraform plan -out solution.plan`
+  2. apply plan
+    - `terraform apply "solution.plan"`
 
 ### Notes
 
