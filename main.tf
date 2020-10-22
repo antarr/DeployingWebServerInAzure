@@ -30,13 +30,49 @@ resource "azurerm_network_security_group" "udacity_nsg" {
   tags                = var.tags
 
   security_rule {
-    name                       = "https"
-    priority                   = 101
+    name                       = "allow-virtual-network-inbound"
+    priority                   = 200
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
     source_port_range          = "*"
-    destination_port_range     = "443"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+
+  security_rule {
+    name                       = "allow-virtual-network-outbound"
+    priority                   = 250
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+
+  security_rule {
+    name                       = "block-all-inbound"
+    priority                   = 300
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "block-all-outbound"
+    priority                   = 350
+    direction                  = "Outbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
@@ -46,9 +82,9 @@ resource "azurerm_public_ip" "udacity_pip" {
   name                = "${var.prefix}-pip"
   resource_group_name = azurerm_resource_group.udacity_rg.name
   location            = azurerm_resource_group.udacity_rg.location
-  allocation_method   = "Dynamic"
-
-  tags = var.tags
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  tags                = var.tags
 }
 
 resource "azurerm_network_interface" "udacity_ni" {
@@ -70,7 +106,7 @@ resource "azurerm_lb" "udacity_lb" {
   name                = "${var.prefix}-loadbalancer"
   resource_group_name = azurerm_resource_group.udacity_rg.name
   location            = azurerm_resource_group.udacity_rg.location
-
+  sku                 = "Standard"
   frontend_ip_configuration {
     name                 = "PublicIPAddress"
     public_ip_address_id = azurerm_public_ip.udacity_pip.id
