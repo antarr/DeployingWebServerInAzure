@@ -24,7 +24,12 @@ variable "prefix" {
 
 variable "instance_count" {
   description = "Number machines to be created"
+  type        = number
   default     = 2
+  validation {
+    condition     = tobool(var.instance_count < 2 || var.instance_count > 5) == true
+    error_message = "The instance_count value must be a number between 2 and 5."
+  }
 }
 
 variable "packer_resource_group" {
