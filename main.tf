@@ -65,7 +65,7 @@ resource "azurerm_public_ip" "udacity_pip" {
 }
 
 resource "azurerm_lb" "udacity_lb" {
-  name = "${var.prefix}-loadbalancer"
+  name                = "${var.prefix}-loadbalancer"
   resource_group_name = azurerm_resource_group.udacity_rg.name
   location            = azurerm_resource_group.udacity_rg.location
 
@@ -93,4 +93,44 @@ resource "azurerm_availability_set" "udacity_aset" {
   resource_group_name = azurerm_resource_group.udacity_rg.name
 
   tags = var.tags
+}
+
+data "azurerm_resource_group" "packer_rg" {
+  name = var.packer_resource_group
+}
+
+resource "azurerm_image" "packer_image" {
+  name                = var.packer_image_name
+  location            = azurerm_resource_group.udacity_rg.location
+  resource_group_name = data.azurerm_resource_group.packer_rg.name
+}
+
+resource "azurerm_linux_virtual_machine_scale_set" "udacity_vms" {
+  name                = "${var.prefix}-machines"
+  instances           = var.instance_count
+  resource_group_name = azurerm_resource_group.udacity_rg.name
+  location            = azurerm_resource_group.udacity_rg.location
+  sku                 = "Standard_F2"
+  admin_username      = "udacity_admin"
+  source_image_id     = azurerm_image.packer_image.id
+  network_interface {
+    name    = "primary_ni"
+    primary = true
+
+    ip_configuration {
+      name      = "internal"
+      primary   = true
+      subnet_id = azurerm_subnet.udacity_sn.id
+    }
+  }
+
+  admin_ssh_key {
+    username   = "udacity_admin"
+    public_key = file("~/.ssh/id_rsa.pub")
+  }
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
 }

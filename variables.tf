@@ -22,7 +22,17 @@ variable "prefix" {
   default     = "udacity-deploy"
 }
 
-variable "instances" {
+variable "instance_count" {
   description = "Number machines to be created"
-  default     = 1
+  default     = 2
+}
+
+variable "packer_resource_group" {
+  description = "Resource group for packer image"
+  default     = "packer-rg"
+}
+
+variable "packer_image_name" {
+  description = "Name of image to be used on Virtual Machines"
+  default     = "udacityPackerImage"
 }
