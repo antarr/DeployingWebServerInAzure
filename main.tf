@@ -58,15 +58,13 @@ resource "azurerm_network_interface" "udacity_ni" {
   location            = azurerm_resource_group.udacity_rg.location
 
   ip_configuration {
-    name                          = "udacity_nic_config"
+    name                          = "udacity_nic_config-${count.index}"
     subnet_id                     = azurerm_subnet.udacity_sn.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.udacity_pip.id
   }
 
   tags = var.tags
 }
-
 
 resource "azurerm_lb" "udacity_lb" {
   name                = "${var.prefix}-loadbalancer"
@@ -86,9 +84,9 @@ resource "azurerm_lb_backend_address_pool" "udacity_lb_bap" {
 }
 
 resource "azurerm_network_interface_backend_address_pool_association" "udacity_ni_bapa" {
-  count = var.instance_count
+  count                   = var.instance_count
   network_interface_id    = azurerm_network_interface.udacity_ni[count.index].id
-  ip_configuration_name   = "udacityConfiguration"
+  ip_configuration_name   = "udacity_nic_config-${count.index}"
   backend_address_pool_id = azurerm_lb_backend_address_pool.udacity_lb_bap.id
 }
 
@@ -104,9 +102,8 @@ data "azurerm_resource_group" "packer_rg" {
   name = var.packer_resource_group
 }
 
-resource "azurerm_image" "packer_image" {
+data "azurerm_image" "packer_image" {
   name                = var.packer_image_name
-  location            = azurerm_resource_group.udacity_rg.location
   resource_group_name = data.azurerm_resource_group.packer_rg.name
 }
 
@@ -117,7 +114,7 @@ resource "azurerm_linux_virtual_machine" "udacity_vms" {
   location            = azurerm_resource_group.udacity_rg.location
   size                = "Standard_F2"
   admin_username      = "udacity_admin"
-  source_image_id     = azurerm_image.packer_image.id
+  source_image_id     = data.azurerm_image.packer_image.id
   availability_set_id = azurerm_availability_set.udacity_aset.id
 
   network_interface_ids = [
