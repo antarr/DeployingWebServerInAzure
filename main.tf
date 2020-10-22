@@ -42,19 +42,6 @@ resource "azurerm_network_security_group" "udacity_nsg" {
   }
 }
 
-resource "azurerm_network_interface" "udacity_ni" {
-  name                = "${var.prefix}-ni"
-  resource_group_name = azurerm_resource_group.udacity_rg.name
-  location            = azurerm_resource_group.udacity_rg.location
-
-  ip_configuration {
-    name                          = "primary"
-    private_ip_address_allocation = "Dynamic"
-  }
-
-  tags = var.tags
-}
-
 resource "azurerm_public_ip" "udacity_pip" {
   name                = "${var.prefix}-pip"
   resource_group_name = azurerm_resource_group.udacity_rg.name
@@ -63,6 +50,23 @@ resource "azurerm_public_ip" "udacity_pip" {
 
   tags = var.tags
 }
+
+resource "azurerm_network_interface" "udacity_ni" {
+  count               = var.instance_count
+  name                = "${var.prefix}-ni-${count.index}"
+  resource_group_name = azurerm_resource_group.udacity_rg.name
+  location            = azurerm_resource_group.udacity_rg.location
+
+  ip_configuration {
+    name                          = "udacity_nic_config"
+    subnet_id                     = azurerm_subnet.udacity_sn.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.udacity_pip.id
+  }
+
+  tags = var.tags
+}
+
 
 resource "azurerm_lb" "udacity_lb" {
   name                = "${var.prefix}-loadbalancer"
@@ -82,7 +86,8 @@ resource "azurerm_lb_backend_address_pool" "udacity_lb_bap" {
 }
 
 resource "azurerm_network_interface_backend_address_pool_association" "udacity_ni_bapa" {
-  network_interface_id    = azurerm_network_interface.udacity_ni.id
+  count = var.instance_count
+  network_interface_id    = azurerm_network_interface.udacity_ni[count.index].id
   ip_configuration_name   = "udacityConfiguration"
   backend_address_pool_id = azurerm_lb_backend_address_pool.udacity_lb_bap.id
 }
@@ -105,24 +110,19 @@ resource "azurerm_image" "packer_image" {
   resource_group_name = data.azurerm_resource_group.packer_rg.name
 }
 
-resource "azurerm_linux_virtual_machine_scale_set" "udacity_vms" {
-  name                = "${var.prefix}-machines"
-  instances           = var.instance_count
+resource "azurerm_linux_virtual_machine" "udacity_vms" {
+  count               = var.instance_count
+  name                = "${var.prefix}-machines-${count.index}"
   resource_group_name = azurerm_resource_group.udacity_rg.name
   location            = azurerm_resource_group.udacity_rg.location
-  sku                 = "Standard_F2"
+  size                = "Standard_F2"
   admin_username      = "udacity_admin"
   source_image_id     = azurerm_image.packer_image.id
-  network_interface {
-    name    = "primary_ni"
-    primary = true
+  availability_set_id = azurerm_availability_set.udacity_aset.id
 
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.udacity_sn.id
-    }
-  }
+  network_interface_ids = [
+    azurerm_network_interface.udacity_ni[count.index].id
+  ]
 
   admin_ssh_key {
     username   = "udacity_admin"
@@ -133,4 +133,23 @@ resource "azurerm_linux_virtual_machine_scale_set" "udacity_vms" {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
+}
+
+resource "azurerm_managed_disk" "udacity_md" {
+  count                = var.instance_count
+  name                 = "udacticy_md_${count.index}"
+  resource_group_name  = azurerm_resource_group.udacity_rg.name
+  location             = azurerm_resource_group.udacity_rg.location
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = "1"
+  tags                 = var.tags
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "udacity_mda" {
+  count              = var.instance_count
+  managed_disk_id    = azurerm_managed_disk.udacity_md[count.index].id
+  virtual_machine_id = azurerm_linux_virtual_machine.udacity_vms[count.index].id
+  lun                = "10"
+  caching            = "ReadWrite"
 }
